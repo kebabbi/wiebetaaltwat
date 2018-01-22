@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+        <meta content="utf-8" http-equiv="encoding">
+
+        <title>Wie betaalt wat?</title>
+
+        <script>
+            Element.prototype.remove = function() {
+                this.parentElement.removeChild(this);
+            }
+            NodeList.prototype.remove = HTMLCollection.prototype.remove = function() {
+                for(var i = this.length - 1; i >= 0; i--) {
+                    if(this[i] && this[i].parentElement) {
+                        this[i].parentElement.removeChild(this[i]);
+                    }
+                }
+            }
+
+            var nextId = 0;
+
+            function addPerson(){
+                var peopleDiv = document.getElementById("people");
+                var person = createPerson();
+                people.appendChild(person);
+            }
+
+            function createPerson(){
+                var id = nextId++;
+                var personDiv = document.createElement("div");
+                personDiv.className = "person";
+                personDiv.id = "person"+id;
+                
+                var personInput = document.createElement("input");
+                personInput.name = "name"+id;
+                var personLabel = document.createElement("label");
+                personLabel.htmlFor = personInput.name;
+                personLabel.innerHTML = "Naam:"
+
+                var amountInput = document.createElement("input");
+                amountInput.name = "amount"+id;
+                var amountLabel = document.createElement("label");
+                amountLabel.htmlFor = amountInput.name;
+                amountLabel.innerHTML = "Bedrag:";
+
+                var deleteButton = document.createElement("button");
+                deleteButton.onclick = function(){removePerson(id)};
+                deleteButton.innerHTML = "X";
+
+                personDiv.appendChild(personLabel);
+                personDiv.appendChild(personInput);
+                personDiv.appendChild(amountLabel);
+                personDiv.appendChild(amountInput);
+                personDiv.appendChild(deleteButton);
+
+                return personDiv;
+            }
+
+            function removePerson(id){
+                var person = document.getElementById("person"+id);
+                person.remove();
+            }
+
+            function parseAmount(amount){
+                if(amount == ""){
+                    return 0;
+                }
+                return parseInt(amount);
+            }
+
+            function calculate(){
+                var peopleDivs = document.getElementsByClassName("person");
+                var people = [];
+                var totalAmount = 0;
+                for(var i=0; i<peopleDivs.length; i++){
+                    var inputs = peopleDivs[i].getElementsByTagName("input");
+                    
+                    var name = inputs[0].value;
+                    var amount = parseAmount(inputs[1].value);
+
+                    person = {name, amount};
+                    people.push(person);
+
+                    totalAmount += amount;
+                }
+
+                var avgAmount = totalAmount / people.length;
+
+                var payers = [];
+                var receivers = [];
+                for(var i=0;i<people.length;i++){
+                    var person = people[i];
+                    person.toPay = avgAmount - person.amount;
+                    if(person.toPay < 0){
+                        receivers.push(person);
+                    } else if(person.toPay > 0){
+                        payers.push(person);
+                    }
+                }
+
+                receivers.sort(function(p1,p2){
+                    return p1.toPay - p2.toPay;
+                });
+                payers.sort(function(p1,p2){
+                    return p2.toPay - p1.toPay;
+                });
+                
+                var transactions = [];
+                var receiverId = 0;
+                for(var payerId = 0; payerId < payers.length; payerId++){
+                    var payer = payers[payerId];
+                    while(payer.toPay > 0 && receiverId < receivers.length){
+                        var receiver = receivers[receiverId];
+                        var amount = Math.min(payer.toPay, -receiver.toPay);
+                        payer.toPay -= amount;
+                        receiver.toPay += amount;
+                        if(receiver.toPay >= 0){
+                            receiverId++;
+                        }
+                        var transaction = {from:payer.name, to:receiver.name, amount}
+                        transactions.push(transaction);
+                    }
+                }
+
+                var transactionsDiv = document.getElementById("transactions");
+                transactionsDiv.innerHTML = "";
+
+                for(var i=0;i<transactions.length;i++){                    
+                    var transactionDiv = document.createElement("div");
+                    var transaction = transactions[i];
+                    transactionDiv.innerHTML = transaction.from + " betaalt " + transaction.amount.toFixed(2) + " aan " + transaction.to;
+                    transactionsDiv.appendChild(transactionDiv);
+                }
+            }
+        </script>
+
+    </head>
+    <body>
+        <button onclick="addPerson()">Nieuw persoon</button>
+        <button onclick="calculate()">Bereken wie wat betaalt</button>
+        <div id="people"></div>
+        <div id="transactions"></div>
+    </body>
+</html>
