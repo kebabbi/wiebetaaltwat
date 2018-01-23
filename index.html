@@ -9,45 +9,42 @@
 
     <script src="https://cdn.jsdelivr.net/npm/vue"></script>
 
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
     <style>
         .people-list-item {
           transition: all .2s;
-          margin-right: 10px;
         }
-        .people-list-enter, .people-list-leave-to
-        /* .people-list-leave-active below version 2.1.8 */ {
+        .people-list-enter, .people-list-leave-to {
           opacity: 0;
           transform: translateY(30px);
         }
         .people-list-leave-active {
           position: absolute;
         }
-        .person-name{
-            width:50%;
-        }
-        .person-amount{
-            width:30%;
-        }
-        .person-delete{
-            width:10%;
-        }
     </style>
 </head>
 <body>
-    <div id="app-4">
-        <button v-on:click="addPerson">add person</button>
-        <ul>
-            <transition-group name="people-list">
-                <li v-for="(person, index) in people" v-bind:key="person" class="people-list-item">
-                    <input v-model="person.name" onClick="this.select()" class="person-name">
-                    <input v-model.number="person.amount" onClick="this.select()" type="number" min="0" step="any" class="person-amount">
-                    <button v-on:click="people.splice(index, 1)" class="person-delete">X</button>
-                </li>
-            </transition>
+    <div id="app-4" class="container">
+        <button type="button" class="btn btn-primary btn-block" v-on:click="addPerson">Add person</button>
+        <transition-group name="people-list">
+            <div v-for="(person, index) in people" v-bind:key="person" class="people-list-item">
+                <div class="input-group">
+                    <input v-model="person.name" type="text" class="form-control" placeholder="Name" onclick="this.select()">
+                    <input v-model.number="person.amount" type="number" min="0" step="any" class="form-control" placeholder="Amount" onclick="this.select()">
+                    <div class="input-group-append">
+                        <button v-on:click="people.splice(index, 1)" class="btn btn-outline-secondary">X</button>
+                    </div>
+                </div>
+            </div>
+        </transition-group>
+        <ul class="list-group">
+            <li class="list-group-item active">Transactions</li>
+            <li v-if="!transactions.length" class="list-group-item">None</li>
+            <li v-for="transaction in transactions" class="list-group-item">
+                {{transaction.from}} pays {{transaction.amount.toFixed(2)}} to {{transaction.to}}
+            </li>
         </ul>
-        <p v-for="transaction in transactions">
-            {{transaction.from}} pays {{transaction.amount.toFixed(2)}} to {{transaction.to}}
-        </p>
     </div>
 
     <script>
