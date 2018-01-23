@@ -5,20 +5,46 @@
     <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
     <meta content="utf-8" http-equiv="encoding">
 
-    <title>Vue test</title>
+    <title>Wie betaalt wat?</title>
 
     <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+
+    <style>
+        .people-list-item {
+          transition: all .2s;
+          margin-right: 10px;
+        }
+        .people-list-enter, .people-list-leave-to
+        /* .people-list-leave-active below version 2.1.8 */ {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        .people-list-leave-active {
+          position: absolute;
+        }
+        .person-name{
+            width:50%;
+        }
+        .person-amount{
+            width:30%;
+        }
+        .person-delete{
+            width:10%;
+        }
+    </style>
 </head>
 <body>
     <div id="app-4">
         <button v-on:click="addPerson">add person</button>
-        <ol>
-            <li v-for="(person, index) in people">
-                <input v-model="person.name">
-                <input v-model.number="person.amount" type="number" min="0" step="any">
-                <button v-on:click="people.splice(index, 1)">X</button>
-            </li>
-        </ol>
+        <ul>
+            <transition-group name="people-list">
+                <li v-for="(person, index) in people" v-bind:key="person" class="people-list-item">
+                    <input v-model="person.name" onClick="this.select()" class="person-name">
+                    <input v-model.number="person.amount" onClick="this.select()" type="number" min="0" step="any" class="person-amount">
+                    <button v-on:click="people.splice(index, 1)" class="person-delete">X</button>
+                </li>
+            </transition>
+        </ul>
         <p v-for="transaction in transactions">
             {{transaction.from}} pays {{transaction.amount.toFixed(2)}} to {{transaction.to}}
         </p>
