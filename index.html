@@ -1,146 +1,81 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
-        <meta content="utf-8" http-equiv="encoding">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+    <meta content="utf-8" http-equiv="encoding">
 
-        <title>Wie betaalt wat?</title>
+    <title>Vue test</title>
 
-        <script>
-            Element.prototype.remove = function() {
-                this.parentElement.removeChild(this);
-            }
-            NodeList.prototype.remove = HTMLCollection.prototype.remove = function() {
-                for(var i = this.length - 1; i >= 0; i--) {
-                    if(this[i] && this[i].parentElement) {
-                        this[i].parentElement.removeChild(this[i]);
-                    }
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+</head>
+<body>
+    <div id="app-4">
+        <button v-on:click="addPerson">add person</button>
+        <ol>
+            <li v-for="(person, index) in people">
+                <input v-model="person.name">
+                <input v-model.number="person.amount" type="number" min="0" step="any">
+                <button v-on:click="people.splice(index, 1)">X</button>
+            </li>
+        </ol>
+        <p v-for="transaction in transactions">
+            {{transaction.from}} pays {{transaction.amount.toFixed(2)}} to {{transaction.to}}
+        </p>
+    </div>
+
+    <script>
+        var app4 = new Vue({
+            el: '#app-4',
+            data: {
+                people: [
+                    { name: 'Name', amount: 0},
+                ]
+            },
+            methods: {
+                addPerson: function(){
+                    this.people.push({name:'Name', amount: 0})
                 }
-            }
+            },
+            computed: {
+                transactions: function(){
+                    var totalAmount = this.people.reduce(function(sum, p) { return p.amount + sum  }, 0)
+                    var avgAmount = totalAmount / this.people.length;
 
-            var nextId = 0;
+                    this.people.forEach(function(person){
+                        person.toPay = avgAmount - person.amount;
+                    });
 
-            function addPerson(){
-                var peopleDiv = document.getElementById("people");
-                var person = createPerson();
-                people.appendChild(person);
-            }
-
-            function createPerson(){
-                var id = nextId++;
-                var personDiv = document.createElement("div");
-                personDiv.className = "person";
-                personDiv.id = "person"+id;
-                
-                var personInput = document.createElement("input");
-                personInput.name = "name"+id;
-                var personLabel = document.createElement("label");
-                personLabel.htmlFor = personInput.name;
-                personLabel.innerHTML = "Naam:"
-
-                var amountInput = document.createElement("input");
-                amountInput.name = "amount"+id;
-                var amountLabel = document.createElement("label");
-                amountLabel.htmlFor = amountInput.name;
-                amountLabel.innerHTML = "Bedrag:";
-
-                var deleteButton = document.createElement("button");
-                deleteButton.onclick = function(){removePerson(id)};
-                deleteButton.innerHTML = "X";
-
-                personDiv.appendChild(personLabel);
-                personDiv.appendChild(personInput);
-                personDiv.appendChild(amountLabel);
-                personDiv.appendChild(amountInput);
-                personDiv.appendChild(deleteButton);
-
-                return personDiv;
-            }
-
-            function removePerson(id){
-                var person = document.getElementById("person"+id);
-                person.remove();
-            }
-
-            function parseAmount(amount){
-                if(amount == ""){
-                    return 0;
-                }
-                return parseInt(amount);
-            }
-
-            function calculate(){
-                var peopleDivs = document.getElementsByClassName("person");
-                var people = [];
-                var totalAmount = 0;
-                for(var i=0; i<peopleDivs.length; i++){
-                    var inputs = peopleDivs[i].getElementsByTagName("input");
+                    var payers = this.people.filter(function(person){return person.toPay > 0;});
+                    var receivers = this.people.filter(function(person){return person.toPay < 0;});
                     
-                    var name = inputs[0].value;
-                    var amount = parseAmount(inputs[1].value);
-
-                    person = {name, amount};
-                    people.push(person);
-
-                    totalAmount += amount;
-                }
-
-                var avgAmount = totalAmount / people.length;
-
-                var payers = [];
-                var receivers = [];
-                for(var i=0;i<people.length;i++){
-                    var person = people[i];
-                    person.toPay = avgAmount - person.amount;
-                    if(person.toPay < 0){
-                        receivers.push(person);
-                    } else if(person.toPay > 0){
-                        payers.push(person);
-                    }
-                }
-
-                receivers.sort(function(p1,p2){
-                    return p1.toPay - p2.toPay;
-                });
-                payers.sort(function(p1,p2){
-                    return p2.toPay - p1.toPay;
-                });
-                
-                var transactions = [];
-                var receiverId = 0;
-                for(var payerId = 0; payerId < payers.length; payerId++){
-                    var payer = payers[payerId];
-                    while(payer.toPay > 0 && receiverId < receivers.length){
-                        var receiver = receivers[receiverId];
-                        var amount = Math.min(payer.toPay, -receiver.toPay);
-                        payer.toPay -= amount;
-                        receiver.toPay += amount;
-                        if(receiver.toPay >= 0){
-                            receiverId++;
+                    receivers.sort(function(p1,p2){
+                        return p1.toPay - p2.toPay;
+                    });
+                    payers.sort(function(p1,p2){
+                        return p2.toPay - p1.toPay;
+                    });
+                    
+                    var transactions = [];
+                    var receiverId = 0;
+                    payers.forEach(function(payer){
+                        while(payer.toPay > 0 && receiverId < receivers.length){
+                            var receiver = receivers[receiverId];
+                            var amount = Math.min(payer.toPay, -receiver.toPay);
+                            payer.toPay -= amount;
+                            receiver.toPay += amount;
+                            if(receiver.toPay >= 0){
+                                receiverId++;
+                            }
+                            var transaction = {from:payer.name, to:receiver.name, amount}
+                            transactions.push(transaction);
                         }
-                        var transaction = {from:payer.name, to:receiver.name, amount}
-                        transactions.push(transaction);
-                    }
-                }
+                    })
 
-                var transactionsDiv = document.getElementById("transactions");
-                transactionsDiv.innerHTML = "";
-
-                for(var i=0;i<transactions.length;i++){                    
-                    var transactionDiv = document.createElement("div");
-                    var transaction = transactions[i];
-                    transactionDiv.innerHTML = transaction.from + " betaalt " + transaction.amount.toFixed(2) + " aan " + transaction.to;
-                    transactionsDiv.appendChild(transactionDiv);
+                    return transactions;
                 }
             }
-        </script>
-
-    </head>
-    <body>
-        <button onclick="addPerson()">Nieuw persoon</button>
-        <button onclick="calculate()">Bereken wie wat betaalt</button>
-        <div id="people"></div>
-        <div id="transactions"></div>
-    </body>
+        })
+    </script>
+</body>
 </html>
