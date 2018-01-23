@@ -18,8 +18,10 @@
                 <input v-model.number="person.amount" type="number">
                 <button v-on:click="people.splice(index, 1)">X</button>
             </li>
-            <p>{{totalAmount}}</p>
         </ol>
+        <p v-for="transaction in transactions">
+            {{transaction.from}} pays {{transaction.amount.toFixed(2)}} to {{transaction.to}}
+        </p>
     </div>
 
     <script>
@@ -36,8 +38,47 @@
                 }
             },
             computed: {
-                totalAmount: function(){
-                    return this.people.reduce(function(sum, p) { return p.amount + sum  }, 0);
+                transactions: function(){
+                    var totalAmount = this.people.reduce(function(sum, p) { return p.amount + sum  }, 0)
+                    var avgAmount = totalAmount / this.people.length;
+
+                    var payers = [];
+                    var receivers = [];
+                    for(var i=0;i<this.people.length;i++){
+                        var person = this.people[i];
+                        person.toPay = avgAmount - person.amount;
+                        if(person.toPay < 0){
+                            receivers.push(person);
+                        } else if(person.toPay > 0){
+                            payers.push(person);
+                        }
+                    }
+
+                    receivers.sort(function(p1,p2){
+                        return p1.toPay - p2.toPay;
+                    });
+                    payers.sort(function(p1,p2){
+                        return p2.toPay - p1.toPay;
+                    });
+                    
+                    var transactions = [];
+                    var receiverId = 0;
+                    for(var payerId = 0; payerId < payers.length; payerId++){
+                        var payer = payers[payerId];
+                        while(payer.toPay > 0 && receiverId < receivers.length){
+                            var receiver = receivers[receiverId];
+                            var amount = Math.min(payer.toPay, -receiver.toPay);
+                            payer.toPay -= amount;
+                            receiver.toPay += amount;
+                            if(receiver.toPay >= 0){
+                                receiverId++;
+                            }
+                            var transaction = {from:payer.name, to:receiver.name, amount}
+                            transactions.push(transaction);
+                        }
+                    }
+
+                    return transactions;
                 }
             }
         })
