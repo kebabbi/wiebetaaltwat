@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+    <meta content="utf-8" http-equiv="encoding">
+
+    <title>Vue test</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+</head>
+<body>
+    <div id="app-4">
+        <button v-on:click="addPerson">add person</button>
+        <ol>
+            <li v-for="(person, index) in people">
+                <input v-model="person.name"><input v-model="person.amount"><button v-on:click="people.splice(index, 1)">X</button>
+            </li>
+        </ol>
+    </div>
+
+    <script>
+        var app4 = new Vue({
+            el: '#app-4',
+            data: {
+                people: [
+                { name: 'Name', amount: 0},
+                ]
+            },
+            methods: {
+                addPerson: function(){
+                    this.people.push({name:'Name', amount: 0})
+                }
+            }
+        })
+    </script>
+</body>
+</html>
