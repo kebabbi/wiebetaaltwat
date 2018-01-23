@@ -14,8 +14,11 @@
         <button v-on:click="addPerson">add person</button>
         <ol>
             <li v-for="(person, index) in people">
-                <input v-model="person.name"><input v-model="person.amount"><button v-on:click="people.splice(index, 1)">X</button>
+                <input v-model="person.name">
+                <input v-model.number="person.amount" type="number">
+                <button v-on:click="people.splice(index, 1)">X</button>
             </li>
+            <p>{{totalAmount}}</p>
         </ol>
     </div>
 
@@ -24,12 +27,17 @@
             el: '#app-4',
             data: {
                 people: [
-                { name: 'Name', amount: 0},
+                    { name: 'Name', amount: 0},
                 ]
             },
             methods: {
                 addPerson: function(){
                     this.people.push({name:'Name', amount: 0})
+                }
+            },
+            computed: {
+                totalAmount: function(){
+                    return this.people.reduce(function(sum, p) { return p.amount + sum  }, 0);
                 }
             }
         })
